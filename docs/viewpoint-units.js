@@ -27,7 +27,7 @@ function coordinateText(value, axis, format) {
   return degrees + '° ' + minutes + '′ ' + seconds + '″ ' + direction;
 }
 
-export function setupViewpointUnits() {
+export function setupViewpointUnits(onHeightUnitChange) {
   const $ = id => document.getElementById(id);
   const coords = $('coordinateFormat');
   const units = $('targetDistanceUnit');
@@ -102,6 +102,7 @@ export function setupViewpointUnits() {
     if (meters !== null) setEyeHeight(meters);
     else height.value = '';
     save();
+    onHeightUnitChange();
   };
 
   coords.value = format;
@@ -142,6 +143,9 @@ export function setupViewpointUnits() {
   };
 
   return {
+    formatElevation(meters) {
+      return Math.round(meters / heightFactors[heightUnit]) + ' ' + heightUnit + ' above sea level';
+    },
     setEyeHeight,
     readEyeHeight,
     setCoordinates(lat, lon, keepDraft = false) {

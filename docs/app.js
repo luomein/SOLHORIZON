@@ -1,4 +1,4 @@
-import {setupViewpointUnits} from './viewpoint-units.js?v=inline-height-unit';
+import {setupViewpointUnits} from './viewpoint-units.js?v=elevation-units';
 import {defaultConfiguration} from './default-configuration.js?v=updated-default';
 import {terrain, skyline} from './terrain.js?v=terrain-height';
 import {drawPlacePin, setupPanoramaMap} from './panorama-map.js?v=clean-panorama';
@@ -8,7 +8,7 @@ import {defaultVerticalSpan, mergePins, readStoredPins, setupSnapshots, writeSto
 import {setupDateRuler} from './date-ruler.js?v=vertical';
 
 const $ = id => document.getElementById(id);
-const viewpointUnits = setupViewpointUnits();
+const viewpointUnits = setupViewpointUnits(updateTerrainReadouts);
 const island = [24.8455, 121.9524];
 const places = [
   {name:'Wushih Harbor', local:'烏石港', lat:24.8702, lon:121.8399, aim:'island', view:107},
@@ -208,6 +208,16 @@ function localEventClock(latitude, longitude) {
   };
 }
 
+function updateTerrainReadouts() {
+  if (!model) return;
+  const {base, observer, missing, count} = model;
+  const format = viewpointUnits.formatElevation;
+  $('terrainHeight').textContent = base === null ? 'Unavailable' : format(base);
+  $('terrainStatus').textContent = missing === count ? 'Terrain unavailable · sea-horizon estimate' :
+    missing ? 'Partial terrain · some elevation tiles unavailable' :
+    format(observer) + ' · terrain loaded';
+}
+
 async function setPosition(place, preserveTarget = false, savedTarget = null, keepCoordinateDraft = false) {
   const current = ++revision;
   const eye = viewpointUnits.readEyeHeight() ?? position?.eye ?? 2;
@@ -231,11 +241,7 @@ async function setPosition(place, preserveTarget = false, savedTarget = null, ke
     const result = await terrain(place.lat, place.lon, position.eye);
     if (current !== revision) return;
     model = result;
-    $('terrainHeight').textContent = result.base === null ? 'Unavailable' :
-      Math.round(result.base) + ' m above sea level';
-    $('terrainStatus').textContent = result.missing === result.count ? 'Terrain unavailable · sea-horizon estimate' :
-      result.missing ? 'Partial terrain · some elevation tiles unavailable' :
-      Math.round(result.observer) + ' m above sea level · terrain loaded';
+    updateTerrainReadouts();
   } catch {
     if (current !== revision) return;
     $('terrainHeight').textContent = 'Unavailable';
