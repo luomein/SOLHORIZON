@@ -1,5 +1,7 @@
 const storageKey = 'solhorizon.viewpoint-units';
 const factors = {km:1, mi:1.609344, nm:1.852};
+const distanceUnits = Object.keys(factors);
+const distanceNames = {km:'kilometers', mi:'miles', nm:'nautical miles'};
 
 export function parseCoordinate(value, axis) {
   const text = value.trim().toUpperCase();
@@ -27,7 +29,7 @@ function coordinateText(value, axis, format) {
 export function setupViewpointUnits() {
   const $ = id => document.getElementById(id);
   const coords = $('coordinateFormat');
-  const units = $('distanceUnit');
+  const units = $('targetDistanceUnit');
   const distance = $('targetDistance');
   const coordinateInputs = {lat:$('lat'), lon:$('lon')};
   let format = 'decimal';
@@ -56,7 +58,9 @@ export function setupViewpointUnits() {
     $('shownLongitude').textContent = coordinateInputs.lon.defaultValue;
   }
   function configureDistanceInput() {
-    $('targetDistanceUnit').textContent = unit;
+    units.textContent = unit;
+    units.title = 'Switch distance unit';
+    units.setAttribute('aria-label', 'Switch distance unit, currently ' + distanceNames[unit]);
     distance.max = distanceText(20015);
   }
   function distanceText(km) {
@@ -64,7 +68,6 @@ export function setupViewpointUnits() {
   }
 
   coords.value = format;
-  units.value = unit;
   configureCoordinateInputs();
   configureDistanceInput();
 
@@ -91,10 +94,10 @@ export function setupViewpointUnits() {
     updateCoordinateSummary();
     save();
   };
-  units.onchange = () => {
+  units.onclick = () => {
     const current = distance.value === '' ? null : Number(distance.value) * factors[unit];
     const previous = distance.defaultValue === '' ? null : Number(distance.defaultValue) * factors[unit];
-    unit = units.value;
+    unit = distanceUnits[(distanceUnits.indexOf(unit) + 1) % distanceUnits.length];
     configureDistanceInput();
     distance.defaultValue = distanceText(previous);
     distance.value = distanceText(current);

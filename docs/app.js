@@ -1,4 +1,4 @@
-import {setupViewpointUnits} from './viewpoint-units.js?v=live-viewpoint';
+import {setupViewpointUnits} from './viewpoint-units.js?v=inline-distance-unit';
 import {defaultConfiguration} from './default-configuration.js?v=updated-default';
 import {terrain, skyline} from './terrain.js?v=terrain-height';
 import {drawPlacePin, setupPanoramaMap} from './panorama-map.js?v=clean-panorama';

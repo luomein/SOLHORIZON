@@ -103,7 +103,7 @@ button.date-tick[aria-current=date]{font-weight:850;color:#193e31}
 .map-target-fields legend{padding:0;font-size:.85rem;font-weight:700}
 .map-target-fields .pair{margin-top:5px}
 
-#position fieldset select{font-size:.8rem;padding-right:23px}
+#coordinateFormat{font-size:.8rem;padding-right:23px}
 
 .zoom-axis{text-align:center;color:var(--muted);font-size:1rem;line-height:1}
 .horizontal-zoom{display:flex;align-items:center;gap:6px;padding:5px 8px;background:#f8f9f2;color:var(--muted);font-size:.78rem}
@@ -115,3 +115,7 @@ button.date-tick[aria-current=date]{font-weight:850;color:#193e31}
 #coordinateDialog{width:min(420px,94vw);margin:auto max(12px,calc((100vw - 1380px)/2)) auto auto;background:#fcfcf8}
 #coordinateDialog::backdrop{background:transparent}
 @media(max-width:650px){#coordinateDialog{margin:auto}}
+
+.distance-label{font-size:.85rem;font-weight:700}
+.distance-label label{display:inline}
+.distance-label button{min-height:0;padding:0;border:0;background:transparent;font:inherit;color:#285b49;text-decoration:underline;text-underline-offset:2px}
