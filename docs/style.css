@@ -93,3 +93,5 @@ button.date-tick[aria-current=date]{font-weight:850;color:#193e31}
 .expanded-place-pin:is(:hover,:focus-visible)::before{background:#c05c16}
 .expanded-place-pin.leaflet-marker-draggable:active{cursor:grabbing}
 @media(max-width:420px){#expandedPanoramaMap .map-header{gap:5px}#expandedMapTitle{font-size:1rem}#expandedPanoramaMap .map-header button{padding-inline:6px}}
+
+#position #apply{margin-top:10px}
