@@ -1,6 +1,6 @@
 import {defaultConfiguration} from './default-configuration.js?v=updated-default';
 import {terrain, skyline} from './terrain.js?v=terrain-height';
-import {drawPlacePin, setupPanoramaMap} from './panorama-map.js?v=map-pins';
+import {drawPlacePin, setupPanoramaMap} from './panorama-map.js?v=pin-mode-icon';
 import {day, wrap, difference, bearing, events} from './solar.js?v=moon';
 import {lunarEvents, lunarPhase} from './moon.js?v=phases';
 import {setupSnapshots} from './snapshots.js?v=map-pins';

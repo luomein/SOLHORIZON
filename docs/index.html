@@ -5,11 +5,11 @@
 <meta name="description" content="Find the dates when sunrise or sunset lines up with a landmark.">
 <title>Solhorizon — Solar alignment planner</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="anonymous">
-<link rel="stylesheet" href="style.css?v=viewpoint-button">
+<link rel="stylesheet" href="style.css?v=pin-mode-icon">
 <script defer src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin="anonymous"></script>
 <script defer src="vendor/astronomy-engine.min.js"></script>
 <script defer src="vendor/tz-lookup.js"></script>
-<script type="module" src="app.js?v=map-pins"></script>
+<script type="module" src="app.js?v=pin-mode-icon"></script>
 </head>
 <body>
 <header><a class="brand" href="./"><span class="logo">☀</span> SOLHORIZON</a><span class="header-note">Solar alignment planner</span><div class="header-actions"><button id="help" type="button">How to use</button></div></header>
@@ -86,7 +86,7 @@
 </main>
 
 <dialog id="expandedPanoramaMap" aria-labelledby="expandedMapTitle">
-<div class="map-header"><h2 id="expandedMapTitle">Panorama map</h2><button id="pinMode" type="button" aria-pressed="false">📍 Pin mode</button><button id="resetPanoramaMap" type="button">Reset</button><form method="dialog"><button>Done</button></form></div>
+<div class="map-header"><h2 id="expandedMapTitle">Panorama map</h2><button id="pinMode" type="button" aria-pressed="false"><span class="place-pin-icon" aria-hidden="true"></span>Pin mode</button><button id="resetPanoramaMap" type="button">Reset</button><form method="dialog"><button>Done</button></form></div>
 <div id="expandedMapTiles" aria-label="Expanded panorama map"></div>
 <p class="note" id="expandedMapHint" role="status"></p>
 <div class="expanded-map-key"><span>Mini-map coverage</span><span>Panorama field of view</span></div>

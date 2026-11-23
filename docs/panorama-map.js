@@ -324,7 +324,7 @@ export function setupPanoramaMap({turnTo, moveViewpoint, moveTarget, changePins,
     pin(origin, 'Drag viewpoint', 'viewpoint', moveViewpoint);
     if (target.coordinates) pin(line.at(-1), 'Drag target', 'target', moveTarget);
     for (const [index, place] of pins.entries()) {
-      const icon = L.divIcon({className:'expanded-place-pin', iconSize:[20,22], iconAnchor:[10,20]});
+      const icon = L.divIcon({className:'expanded-place-pin place-pin-icon', iconSize:[20,22], iconAnchor:[10,20]});
       const marker = L.marker([place.lat, position.lon + difference(place.lon, position.lon)], {
         icon, draggable:true, title:place.name ? 'Remove ' + place.name : 'Remove pin ' + (index + 1)
       }).addTo(expandedLayers);
