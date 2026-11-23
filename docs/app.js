@@ -3,7 +3,7 @@ import {terrain, skyline} from './terrain.js?v=terrain-height';
 import {drawPlacePin, setupPanoramaMap} from './panorama-map.js?v=pin-mode-icon';
 import {day, wrap, difference, bearing, events} from './solar.js?v=moon';
 import {lunarEvents, lunarPhase} from './moon.js?v=phases';
-import {setupSnapshots} from './snapshots.js?v=map-pins';
+import {readStoredPins, setupSnapshots, writeStoredPins} from './snapshots.js?v=local-pins';
 import {setupDateRuler} from './date-ruler.js?v=vertical';
 
 const $ = id => document.getElementById(id);
@@ -97,7 +97,11 @@ const panoramaMap = setupPanoramaMap({
     centerOnTarget();
   },
   moveTarget: coordinates => aimAtCoordinates(coordinates, 'Map target'),
-  changePins: next => { pins = next; draw(); },
+  changePins: next => {
+    pins = next;
+    persistPins();
+    draw();
+  },
   resetView: ([lat, lon], coordinates) => {
     const place = places.find(item => item.lat === lat && item.lon === lon) ?? places.at(-1);
     span = 90;
@@ -532,6 +536,12 @@ canvas.onkeydown = event => {
     event.preventDefault();heading = wrap(heading + (event.key === 'ArrowLeft' ? -1 : 1) * span / 12);draw();
   } else if (event.key === 'Enter') setTarget(heading);
 };
+function persistPins() {
+  const saved = writeStoredPins(pins);
+  $('pinStorageStatus').textContent = saved ? '' : 'Pins could not be saved in this browser.';
+  $('pinStorageStatus').hidden = saved;
+}
+
 function restoreConfiguration(config) {
   const {viewpoint, target:savedTarget, start, end} = config;
   $('height').value = viewpoint.eye;
@@ -554,8 +564,11 @@ setupSnapshots({
     end:$('end').value,
     preview:preview ? {...preview, date:dateValue(preview.date)} : null
   }),
-  restore:restoreConfiguration
+  restore:config => {
+    restoreConfiguration(config);
+    persistPins();
+  }
 });
 
 new ResizeObserver(draw).observe(canvas);
-restoreConfiguration(defaultConfiguration);
+restoreConfiguration({...defaultConfiguration, pins:readStoredPins()});

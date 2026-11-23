@@ -1,9 +1,33 @@
 const storageKey = 'solhorizon.snapshots.v1';
+const pinStorageKey = 'solhorizon.pins.v1';
 const day = 86400000;
 const eventTypes = [null, 'rise', 'set', 'moonrise', 'moonset'];
 
 function within(value, min, max) {
   return typeof value === 'number' && Number.isFinite(value) && value >= min && value <= max;
+}
+
+function validPin(pin) {
+  return within(pin?.lat, -85, 85) && within(pin?.lon, -180, 180) &&
+    typeof pin.name === 'string' && pin.name.length <= 100;
+}
+
+export function readStoredPins() {
+  try {
+    const pins = JSON.parse(localStorage.getItem(pinStorageKey) ?? '[]');
+    return Array.isArray(pins) ? pins.filter(validPin).map(({lat, lon, name}) => ({lat, lon, name})) : [];
+  } catch {
+    return [];
+  }
+}
+
+export function writeStoredPins(pins) {
+  try {
+    localStorage.setItem(pinStorageKey, JSON.stringify(pins));
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 function parseDate(value) {
@@ -29,8 +53,7 @@ export function normalizeSnapshot(snapshot) {
         within(coordinates[0], -80, 80) && within(coordinates[1], -180, 180))) ||
       !within(heading, 0, 360) || heading === 360 || !within(span, 8, 155) || (mapZoom !== null && !within(mapZoom, 0, 19)) ||
       !within(last - first, 0, 3659 * day) ||
-      !Array.isArray(pins) || pins.some(pin => !within(pin?.lat, -85, 85) || !within(pin?.lon, -180, 180) ||
-        typeof pin.name !== 'string' || pin.name.length > 100) ||
+      !Array.isArray(pins) || !pins.every(validPin) ||
       !(preview === null || (within(selected, first, last) && eventTypes.includes(preview?.type)))) {
     throw new Error('The snapshot has invalid settings. Check the name, coordinates, and date range.');
   }

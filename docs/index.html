@@ -9,7 +9,7 @@
 <script defer src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin="anonymous"></script>
 <script defer src="vendor/astronomy-engine.min.js"></script>
 <script defer src="vendor/tz-lookup.js"></script>
-<script type="module" src="app.js?v=pin-mode-icon"></script>
+<script type="module" src="app.js?v=local-pins"></script>
 </head>
 <body>
 <header><a class="brand" href="./"><span class="logo">☀</span> SOLHORIZON</a><span class="header-note">Solar alignment planner</span><div class="header-actions"><button id="help" type="button">How to use</button></div></header>
@@ -89,6 +89,7 @@
 <div class="map-header"><h2 id="expandedMapTitle">Panorama map</h2><button id="pinMode" type="button" aria-pressed="false"><span class="place-pin-icon" aria-hidden="true"></span>Pin mode</button><button id="resetPanoramaMap" type="button">Reset</button><form method="dialog"><button>Done</button></form></div>
 <div id="expandedMapTiles" aria-label="Expanded panorama map"></div>
 <p class="note" id="expandedMapHint" role="status"></p>
+<p class="note" id="pinStorageStatus" role="status" hidden></p>
 <div class="expanded-map-key"><span>Mini-map coverage</span><span>Panorama field of view</span></div>
 <p class="note">Pin names use <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> and <a href="https://www.wikipedia.org/">Wikipedia</a>.</p>
 </dialog>
