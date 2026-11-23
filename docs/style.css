@@ -63,13 +63,13 @@ button.date-tick[aria-current=date]{font-weight:850;color:#193e31}
 .date-bearing{display:inline-flex;align-items:center;gap:5px;padding:3px 6px;border-radius:5px;background:#f1f3eb;white-space:nowrap;font-variant-numeric:tabular-nums}
 .date-bearing::before{content:"";width:8px;height:8px;border:1px solid var(--marker-outline);border-radius:50%;background:var(--marker-fill)}
 
-#expandPanoramaMap{position:absolute;top:0;left:calc(100% + 7px);white-space:nowrap;padding:5px 8px;font-size:.74rem;background:#fcfcf8ed}
+#expandPanoramaMap{position:absolute;top:-5px;left:-5px;z-index:3;white-space:nowrap;padding:5px 8px;font-size:.74rem;background:#fcfcf8ed}
 #expandedPanoramaMap{width:min(780px,94vw);max-width:94vw;padding:16px;background:#fcfcf8}
 #expandedMapTiles{height:clamp(200px,58dvh,510px);margin-top:12px;border:1px solid var(--line);border-radius:9px;background:#e8edf0}
 .expanded-map-key{display:flex;gap:8px 20px;flex-wrap:wrap;margin-top:11px;font-size:.82rem;color:var(--muted)}
 .expanded-map-key span::before{content:"";display:inline-block;width:18px;border-top:2px dotted #384943;margin:0 6px 3px 0}
 .expanded-map-key span:last-child::before{border-color:#215d88}
-@media(max-width:540px){#expandPanoramaMap{top:0;left:0}}
+
 
 .snapshot-library{margin-top:17px}
 .snapshot-actions{display:flex;flex-wrap:wrap;gap:7px;margin-top:8px}
@@ -105,3 +105,7 @@ button.date-tick[aria-current=date]{font-weight:850;color:#193e31}
 .map-target-fields .pair{margin-top:5px}
 
 #position fieldset select{font-size:.8rem;padding-right:23px}
+
+.zoom-axis{text-align:center;color:var(--muted);font-size:1rem;line-height:1}
+.horizontal-zoom{display:flex;align-items:center;gap:6px;padding:5px 8px;background:#f8f9f2;color:var(--muted);font-size:.78rem}
+.horizontal-zoom button{width:35px;height:30px;padding:0;font-size:1.1rem}

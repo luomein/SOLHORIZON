@@ -4,7 +4,7 @@ import {terrain, skyline} from './terrain.js?v=terrain-height';
 import {drawPlacePin, setupPanoramaMap} from './panorama-map.js?v=clean-panorama';
 import {day, wrap, difference, bearing, distanceKm, destination, events} from './solar.js?v=map-target-fields';
 import {lunarEvents, lunarPhase} from './moon.js?v=phases';
-import {mergePins, readStoredPins, setupSnapshots, writeStoredPins} from './snapshots.js?v=merge-pins';
+import {defaultVerticalSpan, mergePins, readStoredPins, setupSnapshots, writeStoredPins} from './snapshots.js?v=independent-zoom';
 import {setupDateRuler} from './date-ruler.js?v=vertical';
 
 const $ = id => document.getElementById(id);
@@ -87,7 +87,7 @@ const parse = input => Date.parse(input.value + 'T00:00:00Z');
 const formatDegree = n => n.toFixed(1) + '°';
 const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
 let position, target, model, best, drag, metrics, eventClock;
-let heading, span, series = [], eventSectors = [], revision = 0;
+let heading, span, verticalSpan, series = [], eventSectors = [], revision = 0;
 const solarTypes = ['rise', 'set'];
 let preview = null;
 let closestByType = {};
@@ -335,9 +335,7 @@ function draw() {
   const bottom = h - 36;
   const seaAltitude = model?.sea ?? 0;
   const azAt = x => wrap(heading + (x / w - .5) * span);
-  let high = seaAltitude;
-  for (let x = 0; x <= w; x += 4) high = Math.max(high, skyline(model, azAt(x)));
-  const pitch = Math.min(w / span, bottom * .52 / Math.max(1, high - seaAltitude));
+  const pitch = bottom / verticalSpan;
   const yAt = altitude => bottom - (altitude - seaAltitude) * pitch;
   const xAt = az => w / 2 + difference(az, heading) * w / span;
   metrics = {azAt};
@@ -467,6 +465,8 @@ function applyCoordinates(lat, lon, fromMap = false) {
 $('center').onclick = centerOnTarget;
 $('in').onclick = () => { span = clamp(span / 1.35, 8, 155); draw(); };
 $('out').onclick = () => { span = clamp(span * 1.35, 8, 155); draw(); };
+$('verticalIn').onclick = () => { verticalSpan = clamp(verticalSpan / 1.35, 0.8, 60); draw(); };
+$('verticalOut').onclick = () => { verticalSpan = clamp(verticalSpan * 1.35, 0.8, 60); draw(); };
 
 for (const input of [$('start'),$('end')]) input.onchange = refresh;
 for (const [type, {track}] of Object.entries(bearingRows)) {
@@ -558,6 +558,7 @@ function restoreConfiguration(config) {
   $('start').value = start;
   $('end').value = end;
   span = config.span;
+  verticalSpan = config.verticalSpan ?? defaultVerticalSpan;
   pins = config.pins ?? [];
   panoramaMap.restoreZoom(config.mapZoom);
   preview = config.preview ? {...config.preview, date:Date.parse(config.preview.date + 'T00:00:00Z')} : null;
@@ -569,7 +570,7 @@ setupSnapshots({
   capture: () => ({
     viewpoint:{lat:position.lat, lon:position.lon, eye:position.eye},
     target,
-    heading, span, mapZoom:panoramaMap.getZoom(), pins,
+    heading, span, verticalSpan, mapZoom:panoramaMap.getZoom(), pins,
     start:$('start').value,
     end:$('end').value,
     preview:preview ? {...preview, date:dateValue(preview.date)} : null

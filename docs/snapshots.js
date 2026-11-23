@@ -1,6 +1,7 @@
 const storageKey = 'solhorizon.snapshots.v1';
 const pinStorageKey = 'solhorizon.pins.v1';
 const day = 86400000;
+export const defaultVerticalSpan = 6.5;
 const eventTypes = [null, 'rise', 'set', 'moonrise', 'moonset'];
 
 function within(value, min, max) {
@@ -52,7 +53,7 @@ export function normalizeSnapshot(snapshot) {
     throw new Error('Choose a Solhorizon snapshot JSON file.');
   }
   const name = typeof snapshot.name === 'string' ? snapshot.name.trim() : '';
-  const {viewpoint, target, heading, span, mapZoom = null, start, end, preview, pins = []} = snapshot.configuration ?? {};
+  const {viewpoint, target, heading, span, verticalSpan = defaultVerticalSpan, mapZoom = null, start, end, preview, pins = []} = snapshot.configuration ?? {};
   const first = parseDate(start);
   const last = parseDate(end);
   const coordinates = target?.coordinates;
@@ -62,7 +63,7 @@ export function normalizeSnapshot(snapshot) {
       !within(target?.value, 0, 360) || target.value === 360 || typeof target.name !== 'string' || target.name.length > 100 ||
       !(coordinates === null || (Array.isArray(coordinates) && coordinates.length === 2 &&
         within(coordinates[0], -80, 80) && within(coordinates[1], -180, 180))) ||
-      !within(heading, 0, 360) || heading === 360 || !within(span, 8, 155) || (mapZoom !== null && !within(mapZoom, 0, 19)) ||
+      !within(heading, 0, 360) || heading === 360 || !within(span, 8, 155) || !within(verticalSpan, 0.8, 60) || (mapZoom !== null && !within(mapZoom, 0, 19)) ||
       !within(last - first, 0, 3659 * day) ||
       !Array.isArray(pins) || !pins.every(validPin) ||
       !(preview === null || (within(selected, first, last) && eventTypes.includes(preview?.type)))) {
@@ -73,7 +74,7 @@ export function normalizeSnapshot(snapshot) {
     configuration:{
       viewpoint:{lat:viewpoint.lat, lon:viewpoint.lon, eye:viewpoint.eye},
       target:{value:target.value, name:target.name, coordinates},
-      heading, span, mapZoom, start, end,
+      heading, span, verticalSpan, mapZoom, start, end,
       pins:pins.map(({lat, lon, name}) => ({lat, lon, name})),
       preview:preview ? {date:preview.date, type:preview.type} : null
     }
