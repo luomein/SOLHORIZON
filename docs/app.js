@@ -3,7 +3,7 @@ import {terrain, skyline} from './terrain.js?v=terrain-height';
 import {drawPlacePin, setupPanoramaMap} from './panorama-map.js?v=pin-mode-icon';
 import {day, wrap, difference, bearing, events} from './solar.js?v=moon';
 import {lunarEvents, lunarPhase} from './moon.js?v=phases';
-import {readStoredPins, setupSnapshots, writeStoredPins} from './snapshots.js?v=local-pins';
+import {mergePins, readStoredPins, setupSnapshots, writeStoredPins} from './snapshots.js?v=merge-pins';
 import {setupDateRuler} from './date-ruler.js?v=vertical';
 
 const $ = id => document.getElementById(id);
@@ -565,7 +565,7 @@ setupSnapshots({
     preview:preview ? {...preview, date:dateValue(preview.date)} : null
   }),
   restore:config => {
-    restoreConfiguration(config);
+    restoreConfiguration({...config, pins:mergePins(pins, config.pins ?? [])});
     persistPins();
   }
 });

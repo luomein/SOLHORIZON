@@ -12,6 +12,17 @@ function validPin(pin) {
     typeof pin.name === 'string' && pin.name.length <= 100;
 }
 
+export function mergePins(local, incoming) {
+  const byLocation = new Map();
+  for (const pin of [...local, ...incoming]) {
+    const longitude = Math.round(pin.lon * 1e6);
+    const key = Math.round(pin.lat * 1e6) + '/' + (longitude === 180000000 ? -180000000 : longitude);
+    const existing = byLocation.get(key);
+    if (!existing || (!existing.name && pin.name)) byLocation.set(key, pin);
+  }
+  return [...byLocation.values()];
+}
+
 export function readStoredPins() {
   try {
     const pins = JSON.parse(localStorage.getItem(pinStorageKey) ?? '[]');
