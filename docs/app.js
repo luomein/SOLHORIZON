@@ -513,9 +513,15 @@ function applyCoordinates(lat, lon, fromMap = false) {
   const place = preset ?? {...places.at(-1), lat, lon, view:heading};
   setPosition(fromMap ? {...place, view:heading} : place, fromMap);
 }
-$('center').onclick = centerOnTarget;
-$('in').onclick = () => { span = clamp(span / 1.35, 8, 155); draw(); };
-$('out').onclick = () => { span = clamp(span * 1.35, 8, 155); draw(); };
+function zoomPanorama(factor) {
+  const nextSpan = clamp(span * factor, 8, 155);
+  verticalSpan = clamp(verticalSpan * (nextSpan / span), 0.8, 60);
+  span = nextSpan;
+  draw();
+}
+
+$('in').onclick = () => zoomPanorama(1 / 1.35);
+$('out').onclick = () => zoomPanorama(1.35);
 $('verticalIn').onclick = () => { verticalSpan = clamp(verticalSpan / 1.35, 0.8, 60); draw(); };
 $('verticalOut').onclick = () => { verticalSpan = clamp(verticalSpan * 1.35, 0.8, 60); draw(); };
 

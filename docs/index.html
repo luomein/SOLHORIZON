@@ -5,11 +5,11 @@
 <meta name="description" content="Find the dates when sunrise or sunset lines up with a landmark.">
 <title>Solhorizon — Solar alignment planner</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="anonymous">
-<link rel="stylesheet" href="style.css?v=live-viewpoint">
+<link rel="stylesheet" href="style.css?v=coupled-zoom">
 <script defer src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin="anonymous"></script>
 <script defer src="vendor/astronomy-engine.min.js"></script>
 <script defer src="vendor/tz-lookup.js"></script>
-<script type="module" src="app.js?v=live-viewpoint"></script>
+<script type="module" src="app.js?v=coupled-zoom"></script>
 </head>
 <body>
 <header><a class="brand" href="./"><span class="logo">☀</span> SOLHORIZON</a><span class="header-note">Solar alignment planner</span><div class="header-actions"><button id="help" type="button">How to use</button></div></header>
@@ -36,11 +36,10 @@
 <span class="zoom-axis" aria-hidden="true">↕</span>
 <button id="verticalIn" type="button" title="Zoom in vertically" aria-label="Zoom in vertically">+</button>
 <button id="verticalOut" type="button" title="Zoom out vertically" aria-label="Zoom out vertically">−</button>
-<button id="center" type="button" title="Center target" aria-label="Center target">◎</button>
 </div>
 </div>
 <div class="horizontal-zoom" role="group" aria-label="Horizontal zoom">
-<span>Horizontal zoom</span>
+<span class="zoom-axis" aria-hidden="true">↔</span>
 <button id="out" type="button" title="Zoom out horizontally" aria-label="Zoom out horizontally">−</button>
 <button id="in" type="button" title="Zoom in horizontally" aria-label="Zoom in horizontally">+</button>
 </div>
