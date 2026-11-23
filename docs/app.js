@@ -1,9 +1,9 @@
 import {defaultConfiguration} from './default-configuration.js?v=updated-default';
 import {terrain, skyline} from './terrain.js?v=terrain-height';
-import {setupPanoramaMap} from './panorama-map.js?v=map-reset';
+import {drawPlacePin, setupPanoramaMap} from './panorama-map.js?v=map-pins';
 import {day, wrap, difference, bearing, events} from './solar.js?v=moon';
 import {lunarEvents, lunarPhase} from './moon.js?v=phases';
-import {setupSnapshots} from './snapshots.js?v=inline';
+import {setupSnapshots} from './snapshots.js?v=map-pins';
 import {setupDateRuler} from './date-ruler.js?v=vertical';
 
 const $ = id => document.getElementById(id);
@@ -89,6 +89,7 @@ let heading, span, series = [], eventSectors = [], revision = 0;
 const solarTypes = ['rise', 'set'];
 let preview = null;
 let closestByType = {};
+let pins = [];
 const panoramaMap = setupPanoramaMap({
   turnTo: angle => { heading = wrap(angle); draw(); },
   moveViewpoint: ([lat, lon]) => {
@@ -96,6 +97,7 @@ const panoramaMap = setupPanoramaMap({
     centerOnTarget();
   },
   moveTarget: coordinates => aimAtCoordinates(coordinates, 'Map target'),
+  changePins: next => { pins = next; draw(); },
   resetView: ([lat, lon], coordinates) => {
     const place = places.find(item => item.lat === lat && item.lon === lon) ?? places.at(-1);
     span = 90;
@@ -313,7 +315,7 @@ function updateBearingLegend() {
 
 function draw() {
   if (!target) return;
-  panoramaMap.update(position, target, heading, span, eventSectors);
+  panoramaMap.update(position, target, heading, span, eventSectors, pins);
   updateBearingLegend();
   updateDateRuler({
     start:parse($('start')), end:parse($('end')),
@@ -389,6 +391,32 @@ function draw() {
     ctx.fillStyle = '#f5f8ed';ctx.fillRect(x-width/2,17,width,23);
     ctx.fillStyle = '#244f41';ctx.fillText(label,x,33);
   }
+  ctx.font = '700 12px system-ui';
+  const pinLabels = [];
+  for (const pin of pins) {
+    if (pin.lat === position.lat && pin.lon === position.lon) continue;
+    const azimuth = bearing(position.lat, position.lon, pin.lat, pin.lon);
+    const x = xAt(azimuth);
+    if (x < 0 || x > w) continue;
+    const y = yAt(skyline(model, azimuth));
+    drawPlacePin(ctx, x, y, 11);
+    if (pin.name) pinLabels.push({x, y, name:pin.name});
+  }
+  const labelBounds = [];
+  for (const {x, y, name} of pinLabels) {
+    const width = Math.min(w - 8, ctx.measureText(name).width + 10);
+    const center = clamp(x, width / 2 + 4, w - width / 2 - 4);
+    const left = center - width / 2;
+    let top = y - 54;
+    while (labelBounds.some(rect => left < rect.right && left + width > rect.left && Math.abs(top - rect.top) < 19)) top -= 19;
+    if (top < 44) continue;
+    labelBounds.push({left, right:left + width, top});
+    ctx.fillStyle = '#fff8f7';
+    ctx.fillRect(left, top, width, 18);
+    ctx.fillStyle = '#7d292d';
+    ctx.fillText(name, center, top + 13, width - 8);
+  }
+
   const shownEvents = preview ? cache.get(preview.date) ?? [] : best ? [best] : [];
   for (const event of shownEvents) {
     const x = xAt(event.azimuth);
@@ -510,6 +538,7 @@ function restoreConfiguration(config) {
   $('start').value = start;
   $('end').value = end;
   span = config.span;
+  pins = config.pins ?? [];
   panoramaMap.restoreZoom(config.mapZoom);
   preview = config.preview ? {...config.preview, date:Date.parse(config.preview.date + 'T00:00:00Z')} : null;
   const place = places.find(item => item.lat === viewpoint.lat && item.lon === viewpoint.lon) ?? places.at(-1);
@@ -520,7 +549,7 @@ setupSnapshots({
   capture: () => ({
     viewpoint:{lat:position.lat, lon:position.lon, eye:position.eye},
     target,
-    heading, span, mapZoom:panoramaMap.getZoom(),
+    heading, span, mapZoom:panoramaMap.getZoom(), pins,
     start:$('start').value,
     end:$('end').value,
     preview:preview ? {...preview, date:dateValue(preview.date)} : null

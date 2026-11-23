@@ -17,7 +17,7 @@ export function normalizeSnapshot(snapshot) {
     throw new Error('Choose a Solhorizon snapshot JSON file.');
   }
   const name = typeof snapshot.name === 'string' ? snapshot.name.trim() : '';
-  const {viewpoint, target, heading, span, mapZoom = null, start, end, preview} = snapshot.configuration ?? {};
+  const {viewpoint, target, heading, span, mapZoom = null, start, end, preview, pins = []} = snapshot.configuration ?? {};
   const first = parseDate(start);
   const last = parseDate(end);
   const coordinates = target?.coordinates;
@@ -29,6 +29,8 @@ export function normalizeSnapshot(snapshot) {
         within(coordinates[0], -80, 80) && within(coordinates[1], -180, 180))) ||
       !within(heading, 0, 360) || heading === 360 || !within(span, 8, 155) || (mapZoom !== null && !within(mapZoom, 0, 19)) ||
       !within(last - first, 0, 3659 * day) ||
+      !Array.isArray(pins) || pins.some(pin => !within(pin?.lat, -85, 85) || !within(pin?.lon, -180, 180) ||
+        typeof pin.name !== 'string' || pin.name.length > 100) ||
       !(preview === null || (within(selected, first, last) && eventTypes.includes(preview?.type)))) {
     throw new Error('The snapshot has invalid settings. Check the name, coordinates, and date range.');
   }
@@ -38,6 +40,7 @@ export function normalizeSnapshot(snapshot) {
       viewpoint:{lat:viewpoint.lat, lon:viewpoint.lon, eye:viewpoint.eye},
       target:{value:target.value, name:target.name, coordinates},
       heading, span, mapZoom, start, end,
+      pins:pins.map(({lat, lon, name}) => ({lat, lon, name})),
       preview:preview ? {date:preview.date, type:preview.type} : null
     }
   };
@@ -135,7 +138,7 @@ export function setupSnapshots({capture, restore}) {
     file.value = '';
     if (!source) return;
     try {
-      if (source.size > 65536) throw new Error('Choose a snapshot JSON file under 64 KB.');
+      if (source.size > 1048576) throw new Error('Choose a snapshot JSON file under 1 MB.');
       let data;
       try {
         data = JSON.parse(await source.text());

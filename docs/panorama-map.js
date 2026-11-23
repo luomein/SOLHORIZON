@@ -1,3 +1,4 @@
+import {placeName} from './place-names.js';
 import {bearing, difference, wrap} from './solar.js';
 
 const radians = Math.PI / 180;
@@ -37,7 +38,27 @@ function ringTracks(size, sectors) {
   });
 }
 
-export function setupPanoramaMap({turnTo, moveViewpoint, moveTarget, resetView, markers}) {
+export function drawPlacePin(ctx, x, y, height) {
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.beginPath();
+  ctx.moveTo(0, 0);
+  ctx.bezierCurveTo(-height * .14, -height * .32, -height * .46, -height * .46, -height * .46, -height * .66);
+  ctx.arc(0, -height * .66, height * .46, Math.PI, 0);
+  ctx.bezierCurveTo(height * .46, -height * .46, height * .14, -height * .32, 0, 0);
+  ctx.fillStyle = '#ab3e49';
+  ctx.fill();
+  ctx.strokeStyle = '#fff';
+  ctx.lineWidth = 1.2;
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.arc(0, -height * .66, height * .14, 0, Math.PI * 2);
+  ctx.fillStyle = '#fff';
+  ctx.fill();
+  ctx.restore();
+}
+
+export function setupPanoramaMap({turnTo, moveViewpoint, moveTarget, changePins, resetView, markers}) {
   const overlay = document.getElementById('panoramaMap');
   const compass = document.getElementById('mapCompass');
   const canvas = document.getElementById('panoramaDirections');
@@ -51,7 +72,7 @@ export function setupPanoramaMap({turnTo, moveViewpoint, moveTarget, resetView, 
 
   function draw() {
     if (!current) return;
-    const {position, target, heading, span, eventSectors} = current;
+    const {position, target, heading, span, eventSectors, pins} = current;
     const size = canvas.clientWidth;
     if (!size) return;
     const pixelRatio = window.devicePixelRatio || 1;
@@ -136,6 +157,10 @@ export function setupPanoramaMap({turnTo, moveViewpoint, moveTarget, resetView, 
     line(path, targetMarker.outline, 2, [4, 3]);
     if (targetPoint) marker(targetPoint.x, targetPoint.y, targetMarker.radius, targetMarker.fill, targetMarker.outline, 2);
     marker(viewpoint.x, viewpoint.y, 4, '#253b31', '#fcfcf5', 2);
+    if (map) for (const pin of pins) {
+      const point = map.latLngToContainerPoint([pin.lat, position.lon + difference(pin.lon, position.lon)]);
+      if (Math.hypot(point.x - center, point.y - center) < center) drawPlacePin(ctx, point.x, point.y, 9);
+    }
     const text = 'Target ' + (drag?.bearing ?? target.value).toFixed(1) + '° true';
     if (caption.textContent !== text) caption.textContent = text;
     if (dialog.open && zoomOffset !== null && !expandedPinDragging) drawExpandedMap();
@@ -143,7 +168,42 @@ export function setupPanoramaMap({turnTo, moveViewpoint, moveTarget, resetView, 
 
   const expand = document.getElementById('expandPanoramaMap');
   const dialog = document.getElementById('expandedPanoramaMap');
-  dialog.onclose = () => { expandedPinDragging = false; };
+  const pinButton = document.getElementById('pinMode');
+  const mapElement = document.getElementById('expandedMapTiles');
+  let pinMode = false;
+
+  function setPinMode(active) {
+    pinMode = active;
+    pinButton.setAttribute('aria-pressed', String(active));
+    mapElement.classList.toggle('pin-mode', active);
+    if (dialog.open && expandedLayers) drawExpandedMap();
+  }
+
+  pinButton.onclick = () => setPinMode(!pinMode);
+  dialog.onclose = () => {
+    expandedPinDragging = false;
+    setPinMode(false);
+  };
+
+  function placePin(location, index = current.pins.length) {
+    const point = location.wrap();
+    if (Math.abs(point.lat) > 85) {
+      drawExpandedMap();
+      return;
+    }
+    const pin = {lat:Number(point.lat.toFixed(6)), lon:Number(point.lng.toFixed(6)), name:''};
+    const viewPoint = expandedMap.latLngToContainerPoint(location);
+    const nearby = expandedMap.containerPointToLatLng([viewPoint.x + 12, viewPoint.y]);
+    const radius = Math.max(30, Math.min(250, Math.round(location.distanceTo(nearby))));
+    const updated = [...current.pins];
+    updated[index] = pin;
+    changePins(updated);
+    placeName(pin.lat, pin.lon, radius).then(name => {
+      const index = current.pins.indexOf(pin);
+      if (!name || index === -1) return;
+      changePins(current.pins.map((item, i) => i === index ? {...item, name} : item));
+    });
+  }
   expand.onclick = () => {
     if (!map || !current) return;
     dialog.showModal();
@@ -157,6 +217,7 @@ export function setupPanoramaMap({turnTo, moveViewpoint, moveTarget, resetView, 
       }).addTo(expandedMap);
       expandedLayers = L.layerGroup().addTo(expandedMap);
       expandedMap.on('click', event => {
+        if (pinMode) { placePin(event.latlng); return; }
         if (current.target.coordinates) return;
         const point = event.latlng.wrap();
         if (Math.abs(point.lat) <= 80 && (point.lat !== current.position.lat || point.lng !== current.position.lon)) {
@@ -206,10 +267,11 @@ export function setupPanoramaMap({turnTo, moveViewpoint, moveTarget, resetView, 
   function drawExpandedMap() {
     const L = window.L;
     expandedLayers.clearLayers();
-    const {position, target, heading, span, eventSectors} = current;
+    const {position, target, heading, span, eventSectors, pins} = current;
     const hint = document.getElementById('expandedMapHint');
-    hint.textContent = target.coordinates ? 'Drag either pin. Zoom to change the mini-map’s scale.' :
-      'Drag the viewpoint or click the map to place a target. Zoom to change the mini-map’s scale.';
+    hint.textContent = pinMode ? 'Click the map to add a pin. Drag a pin to move it, or click it to remove it.' :
+      target.coordinates ? 'Drag a marker to move it. Click a red pin to remove it.' :
+      'Drag the viewpoint or click the map to place a target. Click a red pin to remove it.';
     const origin = [position.lat, position.lon];
     const size = canvas.clientWidth;
     const center = size / 2;
@@ -261,6 +323,26 @@ export function setupPanoramaMap({turnTo, moveViewpoint, moveTarget, resetView, 
     }
     pin(origin, 'Drag viewpoint', 'viewpoint', moveViewpoint);
     if (target.coordinates) pin(line.at(-1), 'Drag target', 'target', moveTarget);
+    for (const [index, place] of pins.entries()) {
+      const icon = L.divIcon({className:'expanded-place-pin', iconSize:[20,22], iconAnchor:[10,20]});
+      const marker = L.marker([place.lat, position.lon + difference(place.lon, position.lon)], {
+        icon, draggable:true, title:place.name ? 'Remove ' + place.name : 'Remove pin ' + (index + 1)
+      }).addTo(expandedLayers);
+      marker.on('dragstart', () => { expandedPinDragging = true; });
+      marker.on('dragend', () => {
+        expandedPinDragging = false;
+        placePin(marker.getLatLng(), index);
+      });
+      marker.on('click', event => {
+        L.DomEvent.stopPropagation(event.originalEvent);
+        changePins(current.pins.filter((_, i) => i !== index));
+      });
+      if (place.name) {
+        const tooltip = document.createElement('span');
+        tooltip.textContent = place.name;
+        marker.bindTooltip(tooltip);
+      }
+    }
     return coverage;
   }
 
@@ -354,8 +436,8 @@ export function setupPanoramaMap({turnTo, moveViewpoint, moveTarget, resetView, 
   };
   new ResizeObserver(draw).observe(compass);
 
-  function update(position, target, heading, span, eventSectors) {
-    current = {position, target, heading, span, eventSectors};
+  function update(position, target, heading, span, eventSectors, pins) {
+    current = {position, target, heading, span, eventSectors, pins};
     if (overlay.hidden) {
       overlay.hidden = false;
       const L = window.L;
