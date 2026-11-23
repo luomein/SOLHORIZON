@@ -99,3 +99,7 @@ button.date-tick[aria-current=date]{font-weight:850;color:#193e31}
 #pinMode{display:inline-flex;align-items:center;gap:4px}
 #pinMode .place-pin-icon{position:relative;display:block;width:17px;height:18px;transform:scale(.82);transform-origin:center left}
 #pinMode:focus-visible{outline:none;text-decoration:underline;text-underline-offset:3px}
+
+.map-target-fields{margin:12px 0 0;padding:0;border:0;min-inline-size:0}
+.map-target-fields legend{padding:0;font-size:.85rem;font-weight:700}
+.map-target-fields .pair{margin-top:5px}

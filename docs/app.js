@@ -1,7 +1,7 @@
 import {defaultConfiguration} from './default-configuration.js?v=updated-default';
 import {terrain, skyline} from './terrain.js?v=terrain-height';
 import {drawPlacePin, setupPanoramaMap} from './panorama-map.js?v=pin-mode-icon';
-import {day, wrap, difference, bearing, events} from './solar.js?v=moon';
+import {day, wrap, difference, bearing, distanceKm, destination, events} from './solar.js?v=map-target-fields';
 import {lunarEvents, lunarPhase} from './moon.js?v=phases';
 import {mergePins, readStoredPins, setupSnapshots, writeStoredPins} from './snapshots.js?v=merge-pins';
 import {setupDateRuler} from './date-ruler.js?v=vertical';
@@ -118,6 +118,11 @@ function centerOnTarget() {
 
 function setTarget(value, name = 'Selected bearing', coordinates = null) {
   target = {value:wrap(value), name, coordinates};
+  const angle = $('targetAngle');
+  const distance = $('targetDistance');
+  angle.value = angle.defaultValue = String(Number(target.value.toFixed(3)));
+  distance.value = distance.defaultValue = coordinates ?
+    String(Number(distanceKm(position.lat, position.lon, ...coordinates).toFixed(6))) : '';
   updateMatch();
   draw();
 }
@@ -447,7 +452,25 @@ $('position').onsubmit = event => {
   event.preventDefault();
   const lat = Number($('lat').value);
   const lon = Number($('lon').value);
-  applyCoordinates(lat, lon);
+  const angleInput = $('targetAngle');
+  const distanceInput = $('targetDistance');
+  const sameViewpoint = lat === position.lat && lon === position.lon;
+  const sameTarget = angleInput.value === angleInput.defaultValue && distanceInput.value === distanceInput.defaultValue;
+  let nextTarget = target;
+  if (!sameViewpoint || !sameTarget) {
+    const angle = angleInput.value === angleInput.defaultValue ? target.value : wrap(angleInput.valueAsNumber);
+    const distance = Number(distanceInput.value);
+    const coordinates = distance > 0 ? destination(lat, lon, angle, distance) : null;
+    if (coordinates && Math.abs(coordinates[0]) > 80) {
+      distanceInput.setCustomValidity('Choose an angle or distance that keeps the target between 80° S and 80° N.');
+      distanceInput.reportValidity();
+      distanceInput.setCustomValidity('');
+      return;
+    }
+    nextTarget = {value:angle, name:coordinates ? 'Map target' : 'Selected bearing', coordinates};
+  }
+  const preset = places.find(place => place.lat === lat && place.lon === lon) ?? places.at(-1);
+  setPosition({...preset, lat, lon, view:sameViewpoint && sameTarget ? heading : nextTarget.value}, false, nextTarget);
 };
 function applyCoordinates(lat, lon, fromMap = false) {
   const preset = places.find(place => place.lat === lat && place.lon === lon);

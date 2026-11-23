@@ -10,6 +10,25 @@ export function bearing(lat, lon, targetLat, targetLon) {
   return wrap(Math.atan2(Math.sin(delta) * Math.cos(b), Math.cos(a) * Math.sin(b) - Math.sin(a) * Math.cos(b) * Math.cos(delta)) / rad);
 }
 
+const earthRadiusKm = 6371;
+
+export function distanceKm(lat, lon, targetLat, targetLon) {
+  const a = lat * rad;
+  const b = targetLat * rad;
+  const haversine = Math.sin((b - a) / 2) ** 2 + Math.cos(a) * Math.cos(b) *
+    Math.sin(difference(targetLon, lon) * rad / 2) ** 2;
+  return 2 * earthRadiusKm * Math.asin(Math.sqrt(Math.min(1, haversine)));
+}
+
+export function destination(lat, lon, angle, distance) {
+  const latitude = lat * rad;
+  const arc = distance / earthRadiusKm;
+  const azimuth = angle * rad;
+  const end = Math.asin(Math.sin(latitude) * Math.cos(arc) + Math.cos(latitude) * Math.sin(arc) * Math.cos(azimuth));
+  const offset = Math.atan2(Math.sin(azimuth) * Math.sin(arc) * Math.cos(latitude), Math.cos(arc) - Math.sin(latitude) * Math.sin(end));
+  return [end / rad, difference(lon + offset / rad, 0)];
+}
+
 export function sun(time, latitude, longitude) {
   const days = time / day - 10957.5;
   const anomaly = rad * (357.5291 + 0.98560028 * days);
