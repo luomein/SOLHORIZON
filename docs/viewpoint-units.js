@@ -1,4 +1,5 @@
 const storageKey = 'solhorizon.viewpoint-units';
+const heightFactors = {m:1, ft:0.3048};
 const factors = {km:1, mi:1.609344, nm:1.852};
 const distanceUnits = Object.keys(factors);
 const distanceNames = {km:'kilometers', mi:'miles', nm:'nautical miles'};
@@ -31,11 +32,17 @@ export function setupViewpointUnits() {
   const coords = $('coordinateFormat');
   const units = $('targetDistanceUnit');
   const distance = $('targetDistance');
+  const height = $('height');
+  const heightToggle = $('eyeHeightUnit');
   const coordinateInputs = {lat:$('lat'), lon:$('lon')};
   let format = 'decimal';
   let unit = 'km';
+  let heightUnit = 'm';
+  let displayedHeight;
+  let eyeMeters;
   try {
     const preferences = JSON.parse(localStorage.getItem(storageKey) ?? '{}');
+    if (preferences.heightUnit === 'ft') heightUnit = 'ft';
     if (preferences.format === 'dms') format = 'dms';
     if (Object.hasOwn(factors, preferences.unit)) unit = preferences.unit;
   } catch {
@@ -44,7 +51,7 @@ export function setupViewpointUnits() {
 
   function save() {
     try {
-      localStorage.setItem(storageKey, JSON.stringify({format, unit}));
+      localStorage.setItem(storageKey, JSON.stringify({format, unit, heightUnit}));
     } catch {
       // Units remain usable for the current page.
     }
@@ -66,6 +73,36 @@ export function setupViewpointUnits() {
   function distanceText(km) {
     return km === null ? '' : String(Number((km / factors[unit]).toFixed(6)));
   }
+
+  function heightText(meters) {
+    return String(Number((meters / heightFactors[heightUnit]).toFixed(6)));
+  }
+  function setEyeHeight(meters) {
+    eyeMeters = meters;
+    height.value = heightText(meters);
+    displayedHeight = height.value;
+  }
+  function readEyeHeight() {
+    if (!height.validity.valid) return null;
+    return height.value === displayedHeight ? eyeMeters : Math.min(10000, height.valueAsNumber * heightFactors[heightUnit]);
+  }
+  function configureEyeHeight() {
+    heightToggle.textContent = heightUnit;
+    heightToggle.setAttribute('aria-label', 'Switch eye height unit, currently ' + (heightUnit === 'm' ? 'meters' : 'feet'));
+    height.max = heightText(10000);
+  }
+
+  const initialEyeHeight = height.valueAsNumber;
+  configureEyeHeight();
+  setEyeHeight(initialEyeHeight);
+  heightToggle.onclick = () => {
+    const meters = readEyeHeight();
+    heightUnit = heightUnit === 'm' ? 'ft' : 'm';
+    configureEyeHeight();
+    if (meters !== null) setEyeHeight(meters);
+    else height.value = '';
+    save();
+  };
 
   coords.value = format;
   configureCoordinateInputs();
@@ -105,6 +142,8 @@ export function setupViewpointUnits() {
   };
 
   return {
+    setEyeHeight,
+    readEyeHeight,
     setCoordinates(lat, lon, keepDraft = false) {
       for (const [axis, value] of Object.entries({lat, lon})) {
         const input = coordinateInputs[axis];

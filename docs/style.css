@@ -116,6 +116,6 @@ button.date-tick[aria-current=date]{font-weight:850;color:#193e31}
 #coordinateDialog::backdrop{background:transparent}
 @media(max-width:650px){#coordinateDialog{margin:auto}}
 
-.distance-label{font-size:.85rem;font-weight:700}
-.distance-label label{display:inline}
-.distance-label button{min-height:0;padding:0;border:0;background:transparent;font:inherit;color:#285b49;text-decoration:underline;text-underline-offset:2px}
+.unit-label{font-size:.85rem;font-weight:700}
+.unit-label label{display:inline}
+.unit-label button{min-height:0;padding:0;border:0;background:transparent;font:inherit;color:#285b49;text-decoration:underline;text-underline-offset:2px}

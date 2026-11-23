@@ -5,11 +5,11 @@
 <meta name="description" content="Find the dates when sunrise or sunset lines up with a landmark.">
 <title>Solhorizon — Solar alignment planner</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="anonymous">
-<link rel="stylesheet" href="style.css?v=inline-distance-unit">
+<link rel="stylesheet" href="style.css?v=inline-height-unit">
 <script defer src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin="anonymous"></script>
 <script defer src="vendor/astronomy-engine.min.js"></script>
 <script defer src="vendor/tz-lookup.js"></script>
-<script type="module" src="app.js?v=inline-distance-unit"></script>
+<script type="module" src="app.js?v=inline-height-unit"></script>
 </head>
 <body>
 <header><a class="brand" href="./"><span class="logo">☀</span> SOLHORIZON</a><span class="header-note">Solar alignment planner</span><div class="header-actions"><button id="help" type="button">How to use</button></div></header>
@@ -64,11 +64,11 @@
 <span><b>Longitude</b><span id="shownLongitude"></span></span>
 </button>
 <p class="terrain-height"><label for="terrainHeight">Terrain height</label><output id="terrainHeight" aria-live="polite">Loading…</output></p>
-<div class="pair"><label>Eye height (m)<input id="height" type="number" step="any" min="0" max="10000" value="2" required></label></div>
+<div class="pair"><div><div class="unit-label"><label for="height">Eye height</label> (<button id="eyeHeightUnit" type="button" title="Switch eye height unit">m</button>)</div><input id="height" type="number" step="any" min="0" max="10000" value="2" required></div></div>
 <p class="note" id="terrainStatus" aria-live="polite">Loading elevation tiles…</p>
 <fieldset class="map-target-fields">
 <legend>Map Target</legend>
-<div class="pair"><label>True angle (°)<input id="targetAngle" type="number" min="0" max="360" step="any" required></label><div><div class="distance-label"><label for="targetDistance">Distance</label> (<button id="targetDistanceUnit" type="button">km</button>)</div><input id="targetDistance" type="number" min="0" max="20015" step="any" placeholder="Bearing only"></div></div>
+<div class="pair"><label>True angle (°)<input id="targetAngle" type="number" min="0" max="360" step="any" required></label><div><div class="unit-label"><label for="targetDistance">Distance</label> (<button id="targetDistanceUnit" type="button">km</button>)</div><input id="targetDistance" type="number" min="0" max="20015" step="any" placeholder="Bearing only"></div></div>
 </fieldset>
 </form>
 </section>

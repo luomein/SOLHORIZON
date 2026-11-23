@@ -1,4 +1,4 @@
-import {setupViewpointUnits} from './viewpoint-units.js?v=inline-distance-unit';
+import {setupViewpointUnits} from './viewpoint-units.js?v=inline-height-unit';
 import {defaultConfiguration} from './default-configuration.js?v=updated-default';
 import {terrain, skyline} from './terrain.js?v=terrain-height';
 import {drawPlacePin, setupPanoramaMap} from './panorama-map.js?v=clean-panorama';
@@ -210,8 +210,7 @@ function localEventClock(latitude, longitude) {
 
 async function setPosition(place, preserveTarget = false, savedTarget = null, keepCoordinateDraft = false) {
   const current = ++revision;
-  const height = $('height');
-  const eye = height.validity.valid ? height.valueAsNumber : position?.eye ?? 2;
+  const eye = viewpointUnits.readEyeHeight() ?? position?.eye ?? 2;
   position = {...place, eye};
   eventClock = localEventClock(position.lat, position.lon);
   viewpointUnits.setCoordinates(place.lat, place.lon, keepCoordinateDraft);
@@ -480,8 +479,8 @@ coordinateDialog.onclose = () => {
 };
 
 liveInput([$('height')], () => {
-  const height = $('height');
-  if (height.validity.valid && height.valueAsNumber !== position.eye) {
+  const eye = viewpointUnits.readEyeHeight();
+  if (eye !== null && eye !== position.eye) {
     setPosition({...position, view:heading}, false, target);
   }
 });
@@ -611,7 +610,7 @@ function persistPins() {
 
 function restoreConfiguration(config) {
   const {viewpoint, target:savedTarget, start, end} = config;
-  $('height').value = viewpoint.eye;
+  viewpointUnits.setEyeHeight(viewpoint.eye);
   $('start').value = start;
   $('end').value = end;
   span = config.span;
