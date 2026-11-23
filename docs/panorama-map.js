@@ -1,5 +1,5 @@
 import {placeName} from './place-names.js';
-import {bearing, difference, wrap} from './solar.js';
+import {difference, wrap} from './solar.js';
 
 const radians = Math.PI / 180;
 
@@ -62,7 +62,6 @@ export function setupPanoramaMap({turnTo, moveViewpoint, moveTarget, changePins,
   const overlay = document.getElementById('panoramaMap');
   const compass = document.getElementById('mapCompass');
   const canvas = document.getElementById('panoramaDirections');
-  const caption = document.getElementById('compassBearing');
   const ctx = canvas.getContext('2d');
   const targetMarker = markers.target;
   let map, current, geometry, projectKey, drag, expandedMap, expandedLayers;
@@ -161,8 +160,6 @@ export function setupPanoramaMap({turnTo, moveViewpoint, moveTarget, changePins,
       const point = map.latLngToContainerPoint([pin.lat, position.lon + difference(pin.lon, position.lon)]);
       if (Math.hypot(point.x - center, point.y - center) < center) drawPlacePin(ctx, point.x, point.y, 9);
     }
-    const text = 'Target ' + (drag?.bearing ?? target.value).toFixed(1) + '° true';
-    if (caption.textContent !== text) caption.textContent = text;
     if (dialog.open && zoomOffset !== null && !expandedPinDragging) drawExpandedMap();
   }
 
@@ -400,12 +397,6 @@ export function setupPanoramaMap({turnTo, moveViewpoint, moveTarget, changePins,
     if (Math.hypot(point.x - drag.start.x, point.y - drag.start.y) >= 4) drag.moved = true;
     if (drag.moved && drag.kind) {
       drag.point = droppedPosition(event);
-      if (drag.kind === 'viewpoint' && current.target.coordinates) {
-        const coordinates = mapCoordinates(drag.point);
-        const destination = current.target.coordinates;
-        drag.bearing = Math.abs(coordinates[0]) <= 80 && coordinates.some((value, index) => value !== destination[index]) ?
-          bearing(...coordinates, ...destination) : current.target.value;
-      }
       draw();
     }
   };

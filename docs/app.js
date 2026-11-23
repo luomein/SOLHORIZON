@@ -1,6 +1,6 @@
 import {defaultConfiguration} from './default-configuration.js?v=updated-default';
 import {terrain, skyline} from './terrain.js?v=terrain-height';
-import {drawPlacePin, setupPanoramaMap} from './panorama-map.js?v=pin-mode-icon';
+import {drawPlacePin, setupPanoramaMap} from './panorama-map.js?v=clean-panorama';
 import {day, wrap, difference, bearing, distanceKm, destination, events} from './solar.js?v=map-target-fields';
 import {lunarEvents, lunarPhase} from './moon.js?v=phases';
 import {mergePins, readStoredPins, setupSnapshots, writeStoredPins} from './snapshots.js?v=merge-pins';
@@ -214,12 +214,6 @@ async function setPosition(place, preserveTarget = false, savedTarget = null) {
   eventClock = localEventClock(position.lat, position.lon);
   $('lat').value = place.lat;
   $('lon').value = place.lon;
-  $('sceneName').textContent = place.name;
-  if (place.local) {
-    const small = document.createElement('small');
-    small.textContent = place.local;
-    $('sceneName').append(small);
-  }
   heading = place.view;
   model = null;
   cache.clear();
@@ -393,12 +387,6 @@ function draw() {
     ctx.strokeStyle = markers.target.outline; ctx.lineWidth = markers.target.stroke;
     ctx.setLineDash([4,4]); ctx.beginPath(); ctx.moveTo(tx,16); ctx.lineTo(tx,bottom); ctx.stroke(); ctx.setLineDash([]);
     drawMarker('target', tx, ty);
-    ctx.font = '700 12px system-ui';
-    const label = target.name === 'Selected bearing' ? formatDegree(target.value) : target.name + ' · ' + formatDegree(target.value);
-    const width = ctx.measureText(label).width + 15;
-    const x = clamp(tx,width/2+4,w-width/2-4);
-    ctx.fillStyle = '#f5f8ed';ctx.fillRect(x-width/2,17,width,23);
-    ctx.fillStyle = '#244f41';ctx.fillText(label,x,33);
   }
   ctx.font = '700 12px system-ui';
   const pinLabels = [];
@@ -444,7 +432,6 @@ function draw() {
     ctx.beginPath();ctx.moveTo(x,bottom);ctx.lineTo(x,bottom+6);ctx.stroke();
     ctx.fillText(({0:'N',90:'E',180:'S',270:'W'})[a] ?? a+'°',x,bottom+23);
   }
-  $('heading').textContent = formatDegree(heading) + ' TRUE · ' + Math.round(span) + '° VIEW';
 }
 
 $('help').onclick = () => $('instructions').showModal();
