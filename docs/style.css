@@ -103,3 +103,5 @@ button.date-tick[aria-current=date]{font-weight:850;color:#193e31}
 .map-target-fields{margin:12px 0 0;padding:0;border:0;min-inline-size:0}
 .map-target-fields legend{padding:0;font-size:.85rem;font-weight:700}
 .map-target-fields .pair{margin-top:5px}
+
+#position fieldset select{font-size:.8rem;padding-right:23px}

@@ -1,3 +1,4 @@
+import {setupViewpointUnits} from './viewpoint-units.js';
 import {defaultConfiguration} from './default-configuration.js?v=updated-default';
 import {terrain, skyline} from './terrain.js?v=terrain-height';
 import {drawPlacePin, setupPanoramaMap} from './panorama-map.js?v=clean-panorama';
@@ -7,6 +8,7 @@ import {mergePins, readStoredPins, setupSnapshots, writeStoredPins} from './snap
 import {setupDateRuler} from './date-ruler.js?v=vertical';
 
 const $ = id => document.getElementById(id);
+const viewpointUnits = setupViewpointUnits();
 const island = [24.8455, 121.9524];
 const places = [
   {name:'Wushih Harbor', local:'烏石港', lat:24.8702, lon:121.8399, aim:'island', view:107},
@@ -119,10 +121,8 @@ function centerOnTarget() {
 function setTarget(value, name = 'Selected bearing', coordinates = null) {
   target = {value:wrap(value), name, coordinates};
   const angle = $('targetAngle');
-  const distance = $('targetDistance');
   angle.value = angle.defaultValue = String(Number(target.value.toFixed(3)));
-  distance.value = distance.defaultValue = coordinates ?
-    String(Number(distanceKm(position.lat, position.lon, ...coordinates).toFixed(6))) : '';
+  viewpointUnits.setDistance(coordinates ? distanceKm(position.lat, position.lon, ...coordinates) : null);
   updateMatch();
   draw();
 }
@@ -212,8 +212,7 @@ async function setPosition(place, preserveTarget = false, savedTarget = null) {
   const current = ++revision;
   position = {...place, eye:Number($('height').value)};
   eventClock = localEventClock(position.lat, position.lon);
-  $('lat').value = place.lat;
-  $('lon').value = place.lon;
+  viewpointUnits.setCoordinates(place.lat, place.lon);
   heading = place.view;
   model = null;
   cache.clear();
@@ -437,8 +436,9 @@ function draw() {
 $('help').onclick = () => $('instructions').showModal();
 $('position').onsubmit = event => {
   event.preventDefault();
-  const lat = Number($('lat').value);
-  const lon = Number($('lon').value);
+  const coordinates = viewpointUnits.readCoordinates(position);
+  if (!coordinates) return;
+  const [lat, lon] = coordinates;
   const angleInput = $('targetAngle');
   const distanceInput = $('targetDistance');
   const sameViewpoint = lat === position.lat && lon === position.lon;
@@ -446,7 +446,7 @@ $('position').onsubmit = event => {
   let nextTarget = target;
   if (!sameViewpoint || !sameTarget) {
     const angle = angleInput.value === angleInput.defaultValue ? target.value : wrap(angleInput.valueAsNumber);
-    const distance = Number(distanceInput.value);
+    const distance = viewpointUnits.readDistance();
     const coordinates = distance > 0 ? destination(lat, lon, angle, distance) : null;
     if (coordinates && Math.abs(coordinates[0]) > 80) {
       distanceInput.setCustomValidity('Choose an angle or distance that keeps the target between 80° S and 80° N.');
