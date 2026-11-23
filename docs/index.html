@@ -5,11 +5,11 @@
 <meta name="description" content="Find the dates when sunrise or sunset lines up with a landmark.">
 <title>Solhorizon — Solar alignment planner</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="anonymous">
-<link rel="stylesheet" href="style.css?v=independent-zoom">
+<link rel="stylesheet" href="style.css?v=live-viewpoint">
 <script defer src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin="anonymous"></script>
 <script defer src="vendor/astronomy-engine.min.js"></script>
 <script defer src="vendor/tz-lookup.js"></script>
-<script type="module" src="app.js?v=independent-zoom"></script>
+<script type="module" src="app.js?v=live-viewpoint"></script>
 </head>
 <body>
 <header><a class="brand" href="./"><span class="logo">☀</span> SOLHORIZON</a><span class="header-note">Solar alignment planner</span><div class="header-actions"><button id="help" type="button">How to use</button></div></header>
@@ -63,7 +63,10 @@
 <legend>Display units</legend>
 <div class="pair"><label>Coordinates<select id="coordinateFormat"><option value="decimal">Decimal degrees</option><option value="dms">Deg, min, sec</option></select></label><label>Distance unit<select id="distanceUnit"><option value="km">Kilometers</option><option value="mi">Miles</option><option value="nm">Nautical miles</option></select></label></div>
 </fieldset>
-<div class="pair"><label>Latitude<input id="lat" type="number" step="any" min="-80" max="80" required></label><label>Longitude<input id="lon" type="number" step="any" min="-180" max="180" required></label></div>
+<button id="editCoordinates" class="coordinate-summary" type="button" aria-haspopup="dialog" aria-label="Edit coordinates">
+<span><b>Latitude</b><span id="shownLatitude"></span></span>
+<span><b>Longitude</b><span id="shownLongitude"></span></span>
+</button>
 <p class="terrain-height"><label for="terrainHeight">Terrain height</label><output id="terrainHeight" aria-live="polite">Loading…</output></p>
 <div class="pair"><label>Eye height (m)<input id="height" type="number" step="any" min="0" max="10000" value="2" required></label></div>
 <p class="note" id="terrainStatus" aria-live="polite">Loading elevation tiles…</p>
@@ -71,7 +74,7 @@
 <legend>Map Target</legend>
 <div class="pair"><label>True angle (°)<input id="targetAngle" type="number" min="0" max="360" step="any" required></label><label>Distance (<span id="targetDistanceUnit">km</span>)<input id="targetDistance" type="number" min="0" max="20015" step="any" placeholder="Bearing only"></label></div>
 </fieldset>
-<button id="apply" type="submit">Set viewpoint</button></form>
+</form>
 </section>
 <section class="panel">
 <div class="panel-title"><span class="panel-icon amber">☀</span><h2>Sun and Moon</h2></div>
@@ -103,6 +106,11 @@
 <footer><span>Terrain estimates use elevation tiles and standard atmospheric refraction. Lunar positions use <a href="https://github.com/cosinekitty/astronomy">Astronomy Engine</a>.</span><a href="https://registry.opendata.aws/terrain-tiles/">Elevation data © Mapzen / AWS contributors</a><a href="https://github.com/luomein/SOLHORIZON">GitHub repository</a></footer>
 </main>
 
+<dialog id="coordinateDialog" aria-labelledby="coordinateTitle">
+<div class="map-header"><h2 id="coordinateTitle">Edit coordinates</h2><form method="dialog"><button>Done</button></form></div>
+<div class="pair"><label>Latitude<input id="lat" autofocus type="number" step="any" min="-80" max="80" required></label><label>Longitude<input id="lon" type="number" step="any" min="-180" max="180" required></label></div>
+<p class="note" id="coordinateStatus" role="status">Valid coordinates update the panorama automatically.</p>
+</dialog>
 <dialog id="expandedPanoramaMap" aria-labelledby="expandedMapTitle">
 <div class="map-header"><h2 id="expandedMapTitle">Panorama map</h2><button id="pinMode" type="button" aria-pressed="false"><span class="place-pin-icon" aria-hidden="true"></span>Pin mode</button><button id="resetPanoramaMap" type="button">Reset</button><form method="dialog"><button>Done</button></form></div>
 <div id="expandedMapTiles" aria-label="Expanded panorama map"></div>

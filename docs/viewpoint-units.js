@@ -51,6 +51,10 @@ export function setupViewpointUnits() {
   function configureCoordinateInputs() {
     for (const input of Object.values(coordinateInputs)) input.type = format === 'dms' ? 'text' : 'number';
   }
+  function updateCoordinateSummary() {
+    $('shownLatitude').textContent = coordinateInputs.lat.defaultValue;
+    $('shownLongitude').textContent = coordinateInputs.lon.defaultValue;
+  }
   function configureDistanceInput() {
     $('targetDistanceUnit').textContent = unit;
     distance.max = distanceText(20015);
@@ -84,6 +88,7 @@ export function setupViewpointUnits() {
       input.defaultValue = Number.isFinite(previous) ? coordinateText(previous, axis, format) : '';
       input.value = Number.isFinite(value) ? coordinateText(value, axis, format) : '';
     }
+    updateCoordinateSummary();
     save();
   };
   units.onchange = () => {
@@ -97,22 +102,27 @@ export function setupViewpointUnits() {
   };
 
   return {
-    setCoordinates(lat, lon) {
+    setCoordinates(lat, lon, keepDraft = false) {
       for (const [axis, value] of Object.entries({lat, lon})) {
         const input = coordinateInputs[axis];
-        input.value = input.defaultValue = coordinateText(value, axis, format);
+        const draft = input.value;
+        input.defaultValue = coordinateText(value, axis, format);
+        input.value = keepDraft ? draft : input.defaultValue;
       }
+      updateCoordinateSummary();
     },
-    readCoordinates(position) {
+    readCoordinates(position, report = true) {
       const values = [];
       for (const [axis, input] of Object.entries(coordinateInputs)) {
         const value = input.value === input.defaultValue ? position[axis] :
           format === 'decimal' ? input.valueAsNumber : parseCoordinate(input.value, axis);
         const limit = axis === 'lat' ? 80 : 180;
         if (!Number.isFinite(value) || Math.abs(value) > limit) {
-          input.setCustomValidity('Enter a coordinate between −' + limit + '° and ' + limit + '°.');
-          input.reportValidity();
-          input.setCustomValidity('');
+          if (report) {
+            input.setCustomValidity('Enter a coordinate between −' + limit + '° and ' + limit + '°.');
+            input.reportValidity();
+            input.setCustomValidity('');
+          }
           return null;
         }
         values.push(value);

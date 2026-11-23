@@ -94,7 +94,6 @@ button.date-tick[aria-current=date]{font-weight:850;color:#193e31}
 .expanded-place-pin.leaflet-marker-draggable:active{cursor:grabbing}
 @media(max-width:420px){#expandedPanoramaMap .map-header{gap:5px}#expandedMapTitle{font-size:1rem}#expandedPanoramaMap .map-header button{padding-inline:6px}}
 
-#position #apply{margin-top:10px}
 
 #pinMode{display:inline-flex;align-items:center;gap:4px}
 #pinMode .place-pin-icon{position:relative;display:block;width:17px;height:18px;transform:scale(.82);transform-origin:center left}
@@ -109,3 +108,10 @@ button.date-tick[aria-current=date]{font-weight:850;color:#193e31}
 .zoom-axis{text-align:center;color:var(--muted);font-size:1rem;line-height:1}
 .horizontal-zoom{display:flex;align-items:center;gap:6px;padding:5px 8px;background:#f8f9f2;color:var(--muted);font-size:.78rem}
 .horizontal-zoom button{width:35px;height:30px;padding:0;font-size:1.1rem}
+
+.coordinate-summary{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;width:100%;margin-top:10px;text-align:left;background:#fff}
+.coordinate-summary b,.coordinate-summary span span{display:block}
+.coordinate-summary span span{margin-top:3px;color:var(--muted);overflow-wrap:anywhere}
+#coordinateDialog{width:min(420px,94vw);margin:auto max(12px,calc((100vw - 1380px)/2)) auto auto;background:#fcfcf8}
+#coordinateDialog::backdrop{background:transparent}
+@media(max-width:650px){#coordinateDialog{margin:auto}}

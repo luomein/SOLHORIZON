@@ -1,4 +1,4 @@
-import {setupViewpointUnits} from './viewpoint-units.js';
+import {setupViewpointUnits} from './viewpoint-units.js?v=live-viewpoint';
 import {defaultConfiguration} from './default-configuration.js?v=updated-default';
 import {terrain, skyline} from './terrain.js?v=terrain-height';
 import {drawPlacePin, setupPanoramaMap} from './panorama-map.js?v=clean-panorama';
@@ -208,11 +208,13 @@ function localEventClock(latitude, longitude) {
   };
 }
 
-async function setPosition(place, preserveTarget = false, savedTarget = null) {
+async function setPosition(place, preserveTarget = false, savedTarget = null, keepCoordinateDraft = false) {
   const current = ++revision;
-  position = {...place, eye:Number($('height').value)};
+  const height = $('height');
+  const eye = height.validity.valid ? height.valueAsNumber : position?.eye ?? 2;
+  position = {...place, eye};
   eventClock = localEventClock(position.lat, position.lon);
-  viewpointUnits.setCoordinates(place.lat, place.lon);
+  viewpointUnits.setCoordinates(place.lat, place.lon, keepCoordinateDraft);
   heading = place.view;
   model = null;
   cache.clear();
@@ -432,31 +434,80 @@ function draw() {
 }
 
 $('help').onclick = () => $('instructions').showModal();
-$('position').onsubmit = event => {
-  event.preventDefault();
-  const coordinates = viewpointUnits.readCoordinates(position);
-  if (!coordinates) return;
+$('position').onsubmit = event => event.preventDefault();
+
+function liveInput(inputs, apply) {
+  let timer;
+  const commit = () => {
+    clearTimeout(timer);
+    apply();
+  };
+  for (const input of inputs) {
+    input.addEventListener('input', () => {
+      clearTimeout(timer);
+      timer = setTimeout(commit, 350);
+    });
+    input.addEventListener('change', commit);
+  }
+  return commit;
+}
+
+const coordinateDialog = $('coordinateDialog');
+$('editCoordinates').onclick = () => coordinateDialog.showModal();
+const applyCoordinateEdit = liveInput([$('lat'), $('lon')], () => {
+  const coordinates = viewpointUnits.readCoordinates(position, false);
+  const status = $('coordinateStatus');
+  if (!coordinates) {
+    status.textContent = 'Enter valid latitude and longitude.';
+    return;
+  }
   const [lat, lon] = coordinates;
-  const angleInput = $('targetAngle');
-  const distanceInput = $('targetDistance');
-  const sameViewpoint = lat === position.lat && lon === position.lon;
-  const sameTarget = angleInput.value === angleInput.defaultValue && distanceInput.value === distanceInput.defaultValue;
-  let nextTarget = target;
-  if (!sameViewpoint || !sameTarget) {
-    const angle = angleInput.value === angleInput.defaultValue ? target.value : wrap(angleInput.valueAsNumber);
-    const distance = viewpointUnits.readDistance();
-    const coordinates = distance > 0 ? destination(lat, lon, angle, distance) : null;
-    if (coordinates && Math.abs(coordinates[0]) > 80) {
-      distanceInput.setCustomValidity('Choose an angle or distance that keeps the target between 80° S and 80° N.');
-      distanceInput.reportValidity();
-      distanceInput.setCustomValidity('');
-      return;
-    }
-    nextTarget = {value:angle, name:coordinates ? 'Map target' : 'Selected bearing', coordinates};
+  status.textContent = 'Valid coordinates update the panorama automatically.';
+  if (lat === position.lat && lon === position.lon) return;
+  const distance = target.coordinates ? distanceKm(position.lat, position.lon, ...target.coordinates) : 0;
+  const next = distance ? destination(lat, lon, target.value, distance) : null;
+  if (next && Math.abs(next[0]) > 80) {
+    status.textContent = 'The target would move outside the supported latitude range.';
+    return;
   }
   const preset = places.find(place => place.lat === lat && place.lon === lon) ?? places.at(-1);
-  setPosition({...preset, lat, lon, view:sameViewpoint && sameTarget ? heading : nextTarget.value}, false, nextTarget);
+  setPosition({...preset, lat, lon, view:target.value}, false, {...target, coordinates:next}, true);
+});
+coordinateDialog.onclose = () => {
+  applyCoordinateEdit();
+  viewpointUnits.setCoordinates(position.lat, position.lon);
+  $('coordinateStatus').textContent = 'Valid coordinates update the panorama automatically.';
 };
+
+liveInput([$('height')], () => {
+  const height = $('height');
+  if (height.validity.valid && height.valueAsNumber !== position.eye) {
+    setPosition({...position, view:heading}, false, target);
+  }
+});
+
+liveInput([$('targetAngle'), $('targetDistance')], () => {
+  const angle = $('targetAngle');
+  const distance = $('targetDistance');
+  if (!angle.validity.valid || !distance.validity.valid) return;
+  if (angle.value === angle.defaultValue && distance.value === distance.defaultValue) return;
+  const direction = angle.value === angle.defaultValue ? target.value : wrap(angle.valueAsNumber);
+  const km = viewpointUnits.readDistance();
+  const coordinates = km > 0 ? destination(position.lat, position.lon, direction, km) : null;
+  if (coordinates && Math.abs(coordinates[0]) > 80) {
+    distance.setCustomValidity('Choose an angle or distance that keeps the target between 80° S and 80° N.');
+    distance.reportValidity();
+    distance.setCustomValidity('');
+    return;
+  }
+  const angleDraft = angle.value;
+  const distanceDraft = distance.value;
+  heading = direction;
+  setTarget(direction, coordinates ? 'Map target' : 'Selected bearing', coordinates);
+  angle.value = angle.defaultValue = angleDraft;
+  distance.value = distance.defaultValue = distanceDraft;
+});
+
 function applyCoordinates(lat, lon, fromMap = false) {
   const preset = places.find(place => place.lat === lat && place.lon === lon);
   const place = preset ?? {...places.at(-1), lat, lon, view:heading};
