@@ -37,7 +37,7 @@ function ringTracks(size, sectors) {
   });
 }
 
-export function setupPanoramaMap({turnTo, moveViewpoint, moveTarget, markers}) {
+export function setupPanoramaMap({turnTo, moveViewpoint, moveTarget, resetView, markers}) {
   const overlay = document.getElementById('panoramaMap');
   const compass = document.getElementById('mapCompass');
   const canvas = document.getElementById('panoramaDirections');
@@ -178,6 +178,29 @@ export function setupPanoramaMap({turnTo, moveViewpoint, moveTarget, markers}) {
     zoomOffset = expandedMap.getZoom() - map.getZoom();
     expandedMap.setMinZoom(zoomOffset);
     expandedMap.setMaxZoom(zoomOffset + 19);
+  };
+
+  document.getElementById('resetPanoramaMap').onclick = () => {
+    if (!expandedMap || !map) return;
+    expandedMap.stop();
+    const center = expandedMap.getCenter().wrap();
+    if (Math.abs(center.lat) > 80) {
+      document.getElementById('expandedMapHint').textContent = 'Move the map center between 80° S and 80° N to reset.';
+      return;
+    }
+
+    const zoom = map.getZoom();
+    const pixel = map.project(center, zoom);
+    pixel.x += canvas.clientWidth / 2;
+    const coverageRadius = center.distanceTo(map.unproject(pixel, zoom));
+    // Leaflet distanceTo uses a sphere with a radius of 6,371 km.
+    const arc = coverageRadius / (2 * 6371000);
+    const latitude = center.lat * radians;
+    const eastLat = Math.asin(Math.sin(latitude) * Math.cos(arc));
+    const eastLon = center.lng + Math.atan2(Math.sin(arc), Math.cos(latitude) * Math.cos(arc)) / radians;
+
+    mapZoom = zoom;
+    resetView([center.lat, center.lng], [eastLat / radians, wrap(eastLon + 180) - 180]);
   };
 
   function drawExpandedMap() {

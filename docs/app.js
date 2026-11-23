@@ -1,6 +1,6 @@
 import {defaultConfiguration} from './default-configuration.js?v=updated-default';
 import {terrain, skyline} from './terrain.js?v=terrain-height';
-import {setupPanoramaMap} from './panorama-map.js?v=expanded-map';
+import {setupPanoramaMap} from './panorama-map.js?v=map-reset';
 import {day, wrap, difference, bearing, events} from './solar.js?v=moon';
 import {lunarEvents, lunarPhase} from './moon.js?v=phases';
 import {setupSnapshots} from './snapshots.js?v=inline';
@@ -96,6 +96,11 @@ const panoramaMap = setupPanoramaMap({
     centerOnTarget();
   },
   moveTarget: coordinates => aimAtCoordinates(coordinates, 'Map target'),
+  resetView: ([lat, lon], coordinates) => {
+    const place = places.find(item => item.lat === lat && item.lon === lon) ?? places.at(-1);
+    span = 90;
+    setPosition({...place, lat, lon, view:90}, false, {value:90, name:'Map target', coordinates});
+  },
   markers
 });
 const cache = new Map();

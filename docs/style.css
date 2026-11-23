@@ -82,3 +82,5 @@ button.date-tick[aria-current=date]{font-weight:850;color:#193e31}
 .expanded-map-pin{box-sizing:border-box;border:2px solid #fcfcf5;border-radius:50%;background:#253b31;box-shadow:0 1px 4px #24332c88}
 .expanded-map-pin.target{border-color:var(--marker-outline);background:var(--marker-fill)}
 .expanded-map-pin:active{cursor:grabbing}
+
+#expandedMapTitle{margin-right:auto}
